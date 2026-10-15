@@ -21,8 +21,9 @@ DIAS_CONSUMO = 14      # ventana para calcular el consumo diario
 DIAS_OBJETIVO = 7      # el pedido sugerido cubre una semana más el mínimo
 
 app = Flask(__name__, static_folder="static", static_url_path="")
-# ponytail: en Vercel solo /tmp es escribible y es efímero; para datos persistentes migrar a Postgres.
-app.config["DB"] = os.environ.get("STOCKCAM_DB", "/tmp/inventario.db" if os.environ.get("VERCEL") else str(BASE / "inventario.db"))
+# En Railway, RAILWAY_VOLUME_MOUNT_PATH apunta al volumen persistente.
+_datos = Path(os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", BASE))
+app.config["DB"] = os.environ.get("STOCKCAM_DB", str(_datos / "inventario.db"))
 
 ESQUEMA = """
 CREATE TABLE IF NOT EXISTS productos(
@@ -307,8 +308,7 @@ def ip_local():
             return "127.0.0.1"
 
 
-if os.environ.get("VERCEL"):
-    iniciar_db()
+iniciar_db()  # idempotente; también corre cuando gunicorn importa el módulo
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="StockCam")
@@ -317,7 +317,6 @@ if __name__ == "__main__":
     p.add_argument("--port", type=int, default=5000)
     args = p.parse_args()
 
-    iniciar_db()
     esquema = "https" if args.https else "http"
     print(f"\n  En esta PC:   {esquema}://127.0.0.1:{args.port}")
     print(f"  En el celular: {esquema}://{ip_local()}:{args.port}  (misma red Wi-Fi)\n")
