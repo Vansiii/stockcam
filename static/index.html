@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>StockCam</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><path d='M9 12h14v11H9z M12 12l2-3h4l2 3' fill='none' stroke='white' stroke-width='2'/><circle cx='16' cy='17.5' r='3' fill='white'/></svg>">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="barra">
+  <h1>Stock<span>Cam</span></h1>
+  <p id="total" class="total" aria-live="polite"></p>
+</header>
+
+<main>
+  <!-- ESCANEAR -->
+  <section id="v-escanear" class="vista activa" aria-label="Escanear">
+    <div class="camara">
+      <video id="video" playsinline muted></video>
+      <canvas id="lienzo"></canvas>
+      <div id="tapa" class="tapa">
+        <p>Apunta la cámara a los productos: StockCam los detecta, reconoce cuál es cada uno y te dice cuánto hay en inventario.</p>
+        <button id="b-camara" class="btn primario">Activar cámara</button>
+      </div>
+    </div>
+    <p id="estado-camara" class="nota" aria-live="polite"></p>
+
+    <div class="fila controles">
+      <label>Modo
+        <select id="modo"><option value="contar">Contar productos</option></select>
+      </label>
+      <label>Exigencia <output id="v-exigencia"></output>
+        <input id="exigencia" type="range" min="0.5" max="0.95" step="0.01">
+      </label>
+    </div>
+    <label class="check"><input id="auto" type="checkbox">
+      Conteo automático: si el número se mantiene 2 s, se fija como inventario</label>
+
+    <div id="panel-entrenar" class="tarjeta" hidden>
+      <p>Pon <strong id="nombre-entrenar"></strong> frente a la cámara y gíralo un poco mientras capturas. Con 20–30 muestras desde varios ángulos ya reconoce bien.</p>
+      <div class="fila">
+        <button id="b-capturar" class="btn primario">Capturar 10 muestras</button>
+        <span id="cuenta-muestras" class="nota"></span>
+      </div>
+    </div>
+
+    <div id="codigo" class="tarjeta aviso-codigo" hidden></div>
+    <ul id="conteo" class="lista" aria-live="polite"></ul>
+  </section>
+
+  <!-- PRODUCTOS -->
+  <section id="v-productos" class="vista" aria-label="Productos">
+    <form id="form-producto" class="tarjeta formulario">
+      <h2>Nuevo producto</h2>
+      <label>Nombre<input name="nombre" required maxlength="80" placeholder="Agua mineral 600 ml"></label>
+      <label>Código de barras <small>(opcional)</small><input name="codigo" maxlength="80" inputmode="numeric"></label>
+      <div class="fila">
+        <label>Stock inicial<input name="stock_inicial" type="number" min="0" value="0"></label>
+        <label>Stock mínimo<input name="stock_min" type="number" min="0" value="5"></label>
+      </div>
+      <button class="btn primario">Guardar</button>
+    </form>
+    <ul id="productos" class="lista"></ul>
+  </section>
+
+  <!-- PANEL -->
+  <section id="v-panel" class="vista" aria-label="Panel">
+    <div id="kpis" class="kpis"></div>
+    <div class="tarjeta">
+      <h2>¿Qué reponer?</h2>
+      <p class="nota">Consumo = salidas de los últimos 14 días. El pedido sugerido cubre 7 días más el stock mínimo.</p>
+      <div class="tabla-scroll"><table id="tabla-resumen"></table></div>
+    </div>
+    <div class="tarjeta">
+      <h2>Últimos movimientos</h2>
+      <ul id="movimientos" class="lista compacta"></ul>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Secciones">
+  <button data-vista="escanear" class="activa">Escanear</button>
+  <button data-vista="productos">Productos</button>
+  <button data-vista="panel">Panel</button>
+</nav>
+
+<div id="aviso" class="aviso" role="status" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
